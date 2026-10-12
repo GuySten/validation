@@ -522,11 +522,13 @@ def sood_results(problem, statepoint):
     results = Results(problem.name)
     G = problem.num_groups
     with openmc.StatePoint(statepoint) as sp:
-        # The reference eigenvalues are quoted to at least six decimal places
+        # The tabulated nu values of U-235 (c) and (d) are rounded to seven
+        # digits, so the published k-infinity of problems 17 and 19 differ
+        # from that of the tabulated cross sections by up to 3e-6 relative
         keff = sp.keff
         results.comparisons.append(Comparison(
             'keff', problem.keff, keff.nominal_value, keff.std_dev,
-            atol=1e-6))
+            rtol=5e-6))
 
         if problem.geometry == 'infinite' and problem.flux_ratios:
             tally = sp.get_tally(name='group flux')

@@ -26,7 +26,7 @@ openmc-run-analytic-benchmarks sood 12 44 'URR*'    # by number or name
 openmc-run-analytic-benchmarks ganapol searchlight -p 1000000
 ```
 
-A problem passes when every calculated quantity is within `--n-sigma` (default 4) standard deviations of the reference value. Spatial fluxes add a small relative tolerance for the width of the tally bins. LA-13511 problems 34, 37, 43, and 71 use a Legendre scattering expansion that is negative over part of the cosine interval. Such distributions cannot be sampled exactly by a Monte Carlo code, so they are skipped unless `--include-negative-pdf` is given. Fluxes on vacuum boundaries use the surface flux tally added in OpenMC 0.16.0, so OpenMC 0.16.0 or later is required.
+A problem passes when every calculated quantity is within `--n-sigma` (default 4) standard deviations of the reference value. Spatial fluxes add a small relative tolerance for the width of the tally bins. LA-13511 problems 34, 37, 43, and 71 use a Legendre scattering expansion that is negative over part of the cosine interval, which cannot be sampled as a probability distribution. Because these problems are exactly critical, isotropic neutron production can be moved from fission to in-group scattering without changing the transport operator at keff = 1. Problem 34 has enough fission to make its scattering kernel nonnegative this way, so it is modeled exactly (and compared using the collision/track-length keff, since the shift leaves almost no absorption). Problems 37, 43, and 71 do not, so they are skipped unless `--include-negative-pdf` is given. Fluxes on vacuum boundaries use the surface flux tally added in OpenMC 0.16.0, so OpenMC 0.16.0 or later is required.
 
 ## Tests
 

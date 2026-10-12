@@ -15,6 +15,7 @@ import pytest
 openmc = pytest.importorskip('openmc')
 
 from validation.analytic import ganapol, sood
+from validation.analytic.models import sood_exact
 from validation.analytic.run import run_ganapol, run_sood
 
 
@@ -48,7 +49,7 @@ def _check(results, n_sigma):
 
 def _sood_param(problem):
     marks = []
-    if problem.negative_pdf:
+    if not sood_exact(problem):
         marks.append(pytest.mark.xfail(
             reason='The Legendre scattering expansion is negative over part '
             'of the cosine interval and cannot be sampled exactly',

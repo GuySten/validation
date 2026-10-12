@@ -200,7 +200,7 @@ def sood_model(problem, directory, particles=10000, batches=150, inactive=50):
 
     """
     openmc.reset_auto_ids()
-    mats, collection = _materials(problem.materials, directory)
+    mats, collection = _materials(sood_materials(problem), directory)
     num_groups = problem.num_groups
     anisotropic = any(m.order > 0 for m in problem.materials)
 
@@ -219,6 +219,67 @@ def sood_model(problem, directory, particles=10000, batches=150, inactive=50):
 
     return openmc.Model(geometry, collection, settings,
                         openmc.Tallies(tallies))
+
+
+def sood_materials(problem):
+    """Cross sections used to model a LA-13511 problem.
+
+    For critical problems whose Legendre scattering kernel is negative over
+    part of the cosine interval, isotropic production is moved from fission
+    to scattering where possible (see :meth:`Material.fission_shift`). This
+    leaves the transport operator, and hence the critical dimensions and
+    flux, unchanged while making the scattering kernel a valid probability
+    distribution.
+
+    """
+    materials = []
+    for material in problem.materials:
+        shift = None
+        if problem.geometry != 'infinite' and problem.keff == 1.0:
+            shift = material.fission_shift()
+        if shift is not None:
+            material = material.shifted(shift, name=material.name)
+        materials.append(material)
+    return materials
+
+
+def sood_exact(problem):
+    """Whether OpenMC can model a LA-13511 problem exactly.
+
+    A negative scattering kernel cannot be sampled exactly. It does not
+    matter in an infinite medium, where the flux is isotropic.
+
+    """
+    if problem.geometry == 'infinite':
+        return True
+    return all((m.min_scatter_pdf() >= -1e-12).all()
+               for m in sood_materials(problem))
+
+
+def _shifted(problem):
+    """Whether fission was moved to scattering for any material."""
+    return any(m.scatter[0].sum() != o.scatter[0].sum()
+               for m, o in zip(sood_materials(problem), problem.materials))
+
+
+def _k_collision_tracklength(sp):
+    """Minimum variance combination of the collision and track-length
+    estimates of keff, accounting for their covariance."""
+    tallies = {row['name'].decode(): row for row in sp.global_tallies}
+    col = tallies['k-collision']
+    tra = tallies['k-tracklength']
+    n = sp.n_realizations
+    var_c = col['std_dev']**2
+    var_t = tra['std_dev']**2
+    # Covariance of the means from the accumulated sum of products
+    cov = (sp.k_col_tra/n - col['mean']*tra['mean'])/(n - 1)
+    denominator = var_c + var_t - 2*cov
+    if denominator <= 0.:
+        return col['mean'], np.sqrt(var_c)
+    weight = (var_t - cov)/denominator
+    mean = weight*col['mean'] + (1 - weight)*tra['mean']
+    var = (var_c*var_t - cov**2)/denominator
+    return mean, np.sqrt(max(var, 0.))
 
 
 def _group_filter(num_groups):
@@ -525,10 +586,14 @@ def sood_results(problem, statepoint):
         # The tabulated nu values of U-235 (c) and (d) are rounded to seven
         # digits, so the published k-infinity of problems 17 and 19 differ
         # from that of the tabulated cross sections by up to 3e-6 relative
-        keff = sp.keff
+        if _shifted(problem):
+            # Shifting fission to scattering can leave (nearly) zero
+            # absorption, for which the absorption estimator is useless
+            mean, std = _k_collision_tracklength(sp)
+        else:
+            mean, std = sp.keff.nominal_value, sp.keff.std_dev
         results.comparisons.append(Comparison(
-            'keff', problem.keff, keff.nominal_value, keff.std_dev,
-            rtol=5e-6))
+            'keff', problem.keff, mean, std, rtol=5e-6))
 
         if problem.geometry == 'infinite' and problem.flux_ratios:
             tally = sp.get_tally(name='group flux')

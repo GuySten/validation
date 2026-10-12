@@ -8,7 +8,8 @@ import shutil
 import sys
 
 from . import ganapol, sood
-from .models import ganapol_model, ganapol_results, sood_model, sood_results
+from .models import (ganapol_model, ganapol_results, sood_exact, sood_model,
+                     sood_results)
 
 
 def run_sood(problem, directory, particles=10000, batches=150, inactive=50,
@@ -112,7 +113,7 @@ def main():
     parser.add_argument('--include-negative-pdf', action='store_true',
                         help='Include LA-13511 problems whose Legendre '
                         'scattering expansion is negative over part of the '
-                        'cosine interval')
+                        'cosine interval and cannot be made nonnegative')
     args = parser.parse_args()
 
     if not shutil.which('openmc'):
@@ -121,7 +122,7 @@ def main():
     if args.suite == 'sood':
         problems = _select(sood.PROBLEMS, args.problems)
         if not args.include_negative_pdf and not args.problems:
-            problems = [p for p in problems if not p.negative_pdf]
+            problems = [p for p in problems if sood_exact(p)]
         run = run_sood
     else:
         problems = _select(ganapol.PROBLEMS, args.problems)

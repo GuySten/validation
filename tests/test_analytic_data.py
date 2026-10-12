@@ -146,3 +146,35 @@ def test_surrogate_flux_increases_with_radius(key):
 def test_ganapol_problem_names_unique():
     names = [p.name for p in ganapol.PROBLEMS]
     assert len(names) == len(set(names))
+
+
+def test_negative_scattering_kernels():
+    """Only the kernels flagged in LA-13511 are negative."""
+    negative = {name for name, m in MATERIALS.items()
+                if (m.min_scatter_pdf() < 0.).any()}
+    assert negative == {'PUb-P1', 'Ub-P1', 'UD2Oc-P1', 'URRa-2G-P1'}
+    flagged = {p.number for p in PROBLEMS if p.negative_pdf}
+    assert flagged == {34, 37, 43, 71}
+
+
+@pytest.mark.parametrize('name', ['PUb-P1', 'Ub-P1', 'UD2Oc-P1',
+                                  'URRa-2G-P1'])
+def test_fission_shift(name):
+    """Moving fission to scattering keeps the k = 1 transport operator and
+    makes the kernel nonnegative when there is enough fission."""
+    material = MATERIALS[name]
+    shift = material.fission_shift()
+    if name != 'PUb-P1':
+        # Not enough in-group fission production to offset the negative part
+        assert shift is None
+        return
+    shifted = material.shifted(shift)
+    assert shifted.balance() == pytest.approx(0., abs=1e-12)
+    assert (shifted.min_scatter_pdf() >= -1e-12).all()
+    assert (shifted.absorption >= 0.).all()
+    # Scattering plus fission production is unchanged in every direction
+    original = material.scatter.copy()
+    original[0] += np.outer(material.nu_fission, material.chi)
+    modified = shifted.scatter.copy()
+    modified[0] += np.outer(shifted.nu_fission, shifted.chi)
+    assert modified == pytest.approx(original)

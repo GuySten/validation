@@ -16,7 +16,11 @@ dependencies = [
     "matplotlib",
     "h5py",
     "pandas",
+    "scipy",
 ]
+
+[project.optional-dependencies]
+test = ["pytest"]
 
 [project.urls]
 Homepage = "https://github.com/openmc-dev/validation"
@@ -29,9 +33,16 @@ openmc-validate-photon-production = "validation.photon_production:main"
 openmc-run-benchmarks = "benchmarking.benchmark:main"
 openmc-plot-benchmarks = "benchmarking.plot:main"
 openmc-report-benchmarks = "benchmarking.report:main"
+openmc-run-analytic-benchmarks = "validation.analytic.run:main"
 
 [tool.setuptools.packages.find]
-include = ["validation", "benchmarking"]
+include = ["validation*", "benchmarking*"]
 
 [tool.setuptools.package-data]
 benchmarking = ["uncertainties.csv"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "openmc: runs OpenMC calculations (requires the openmc executable)",
+]

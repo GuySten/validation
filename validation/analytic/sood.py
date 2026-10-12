@@ -361,7 +361,8 @@ PROBLEMS = [
     _round(39, 'UD2Oa-1-1-SP', 'sphere', [('UD2Oa-P1', 18.30563081)], [10]),
     _infinite(40, 'UD2Ob-1-1-IN', 'UD2Ob-P1', 1.227391),
     _round(41, 'UD2Ob-1-1-SP', 'sphere', [('UD2Ob-P1', 18.30563081)], [10]),
-    _infinite(42, 'UD2Oc-1-1-IN', 'UD2Oc-P1', 1.130933, negative_pdf=True),
+    # The negative scattering PDF does not affect an infinite medium
+    _infinite(42, 'UD2Oc-1-1-IN', 'UD2Oc-P1', 1.130933),
     _round(43, 'UD2Oc-1-1-SP', 'sphere', [('UD2Oc-P1', 18.30563081)], [10],
            negative_pdf=True),
 

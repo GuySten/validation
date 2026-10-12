@@ -26,7 +26,7 @@ openmc-run-analytic-benchmarks sood 12 44 'URR*'    # by number or name
 openmc-run-analytic-benchmarks ganapol searchlight -p 1000000
 ```
 
-A problem passes when every calculated quantity is within `--n-sigma` (default 4) standard deviations of the reference value. Spatial fluxes add a small relative tolerance for the width of the tally bins. LA-13511 problems 34, 37, 42, and 43 and the flux shape of problem 71 use a Legendre scattering expansion that is negative over part of the cosine interval. Such distributions cannot be sampled exactly by a Monte Carlo code, so they are skipped unless `--include-negative-pdf` is given. Fluxes on vacuum boundaries use the surface flux tally added in OpenMC 0.16.0, so OpenMC 0.16.0 or later is required.
+A problem passes when every calculated quantity is within `--n-sigma` (default 4) standard deviations of the reference value. Spatial fluxes add a small relative tolerance for the width of the tally bins. LA-13511 problems 34, 37, 43, and 71 use a Legendre scattering expansion that is negative over part of the cosine interval. Such distributions cannot be sampled exactly by a Monte Carlo code, so they are skipped unless `--include-negative-pdf` is given. Fluxes on vacuum boundaries use the surface flux tally added in OpenMC 0.16.0, so OpenMC 0.16.0 or later is required.
 
 ## Tests
 

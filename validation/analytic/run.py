@@ -109,10 +109,6 @@ def main():
     parser.add_argument('--mpi-args', default='',
                         help='MPI execute command and any additional MPI '
                         'arguments')
-    parser.add_argument('--include-negative-pdf', action='store_true',
-                        help='Include LA-13511 problems whose Legendre '
-                        'scattering expansion is negative over part of the '
-                        'cosine interval')
     args = parser.parse_args()
 
     if not shutil.which('openmc'):
@@ -120,8 +116,6 @@ def main():
 
     if args.suite == 'sood':
         problems = _select(sood.PROBLEMS, args.problems)
-        if not args.include_negative_pdf and not args.problems:
-            problems = [p for p in problems if not p.negative_pdf]
         run = run_sood
     else:
         problems = _select(ganapol.PROBLEMS, args.problems)

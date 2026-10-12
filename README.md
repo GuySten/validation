@@ -15,7 +15,7 @@ This repository contains a collection of validation scripts, notebooks, results,
 
 The `validation.analytic` package contains problems with exact (semi-)analytic solutions of the transport equation, which verify the OpenMC multigroup transport algorithms independently of any nuclear data:
 
-- `sood` -- All 75 criticality problems from A. Sood, R. A. Forster, and D. K. Parsons, "Analytical Benchmark Test Set for Criticality Code Verification," LA-13511 (1999): infinite media, slabs, cylinders, spheres, reflected systems, and infinite slab lattice cells with one, two, three, and six groups and isotropic, P1, and P2 scattering. Each problem checks keff (or k-infinity), and, where the report gives them, group flux ratios and normalized spatial flux distributions.
+- `sood` -- 71 of the 75 criticality problems from A. Sood, R. A. Forster, and D. K. Parsons, "Analytical Benchmark Test Set for Criticality Code Verification," LA-13511 (1999): infinite media, slabs, cylinders, spheres, reflected systems, and infinite slab lattice cells with one, two, three, and six groups and isotropic, P1, and P2 scattering. Each problem checks keff (or k-infinity), and, where the report gives them, group flux ratios and normalized spatial flux distributions. Problems 34, 37, 43, and 71 are omitted because their Legendre scattering expansions are negative over part of the cosine interval, which a Monte Carlo code cannot sample as a probability distribution.
 - `ganapol` -- One-group problems from B. D. Ganapol, "Analytical Benchmarks for Nuclear Engineering Applications," NEA/DB/DOC(2008)1: the plane beam in an infinite medium (Benchmark 3.1), the half-space albedo problem (3.2), reflected and transmitted angular fluxes from a slab (3.3), critical radii, critical flux distributions, and fixed-source fluxes of infinite cylinders (3.4), and the searchlight problem (5.1).
 
 Run the problems with, for example:
@@ -26,7 +26,7 @@ openmc-run-analytic-benchmarks sood 12 44 'URR*'    # by number or name
 openmc-run-analytic-benchmarks ganapol searchlight -p 1000000
 ```
 
-A problem passes when every calculated quantity is within `--n-sigma` (default 4) standard deviations of the reference value. Spatial fluxes add a small relative tolerance for the width of the tally bins. LA-13511 problems 34, 37, 43, and 71 use a Legendre scattering expansion that is negative over part of the cosine interval. Such distributions cannot be sampled exactly by a Monte Carlo code, so they are skipped unless `--include-negative-pdf` is given. Fluxes on vacuum boundaries use the surface flux tally added in OpenMC 0.16.0, so OpenMC 0.16.0 or later is required.
+A problem passes when every calculated quantity is within `--n-sigma` (default 4) standard deviations of the reference value. Spatial fluxes add a small relative tolerance for the width of the tally bins. Fluxes on vacuum boundaries use the surface flux tally added in OpenMC 0.16.0, so OpenMC 0.16.0 or later is required.
 
 ## Tests
 

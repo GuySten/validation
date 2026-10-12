@@ -1,10 +1,14 @@
 """Analytical benchmark test set for criticality code verification.
 
-The 75 problems, cross sections, and reference results are taken from
+The problems, cross sections, and reference results are taken from
 
     A. Sood, R. A. Forster, and D. K. Parsons, "Analytical Benchmark Test Set
     for Criticality Code Verification," Los Alamos National Laboratory report
     LA-13511 (1999). Summarized in LA-UR-99-2567.
+
+Problems 34, 37, 43, and 71 are omitted. Their Legendre scattering
+expansions are negative over part of the cosine interval, which cannot be
+sampled as a probability distribution by a Monte Carlo code.
 
 All finite problems are exactly critical (keff = 1) at the quoted critical
 dimensions. Infinite medium problems have the quoted k-infinity. The reference
@@ -49,14 +53,10 @@ _add(Material.one_group('Na', 0.086368032, 0.086368032))
 _add(_one_group_fissile('PUa-P1', 2.5, 0.266667, 0.0, [0.733333, 0.20], 1.0))
 _add(_one_group_fissile('PUa-P2', 2.5, 0.266667, 0.0,
                         [0.733333, 0.20, 0.075], 1.0))
-_add(_one_group_fissile('PUb-P1', 2.5, 0.266667, 0.0,
-                        [0.733333, 0.333333], 1.0))
 _add(_one_group_fissile('PUb-P2', 2.5, 0.266667, 0.0,
                         [0.733333, 0.333333, 0.125], 1.0))
 _add(_one_group_fissile('Ua-P1', 2.70, 0.065280, 0.013056,
                         [0.248064, 0.042432], 0.32640))
-_add(_one_group_fissile('Ub-P1', 2.70, 0.065280, 0.013056,
-                        [0.248064, 0.212160], 0.32640))
 _add(_one_group_fissile('UD2Oa-P1', 1.808381, 0.054628, 0.027314,
                         [0.464338, 0.056312624], 0.54628))
 _add(_one_group_fissile('UD2Ob-P1', 1.841086, 0.054628, 0.027314,
@@ -203,10 +203,6 @@ class Problem:
         (position [cm], reference group, normalized scalar flux) giving
         spatial flux values. Positions are measured from the left boundary
         for slabs and from the center for cylinders and spheres.
-    negative_pdf : bool
-        Whether the Legendre scattering expansion becomes negative over part
-        of the cosine interval. Such distributions cannot be sampled exactly
-        by a Monte Carlo code.
 
     """
     number: int
@@ -218,7 +214,6 @@ class Problem:
     mfp: list = field(default_factory=list)
     flux_ratios: dict = field(default_factory=dict)
     flux_shape: list = field(default_factory=list)
-    negative_pdf: bool = False
 
     @property
     def materials(self):
@@ -230,10 +225,9 @@ class Problem:
         return self.materials[0].num_groups
 
 
-def _infinite(number, name, material, keff, flux_ratios=None,
-              negative_pdf=False):
+def _infinite(number, name, material, keff, flux_ratios=None):
     return Problem(number, name, 'infinite', [(material, None)], keff,
-                   flux_ratios=flux_ratios or {}, negative_pdf=negative_pdf)
+                   flux_ratios=flux_ratios or {})
 
 
 def _bare_slab(number, name, material, rc, mfp, shape=(), **kwargs):
@@ -346,25 +340,20 @@ PROBLEMS = [
     _infinite(31, 'PU-1-1-IN', 'PUa-P1', 2.5),
     _bare_slab(32, 'PUa-1-1-SL', 'PUa-P1', 0.77032, 0.77032),
     _bare_slab(33, 'PUa-1-2-SL', 'PUa-P2', 0.76378, 0.76378),
-    _bare_slab(34, 'PUb-1-1-SL', 'PUb-P1', 0.79606, 0.79606,
-               negative_pdf=True),
     _bare_slab(35, 'PUb-1-2-SL', 'PUb-P2', 0.78396, 0.78396),
 
     # One-group anisotropic U-235 (Tables 26-27)
     _round(36, 'Ua-1-1-CY', 'cylinder', [('Ua-P1', 5.514296811)],
            [1.799866479]),
-    _round(37, 'Ub-1-1-CY', 'cylinder', [('Ub-P1', 6.940205668)],
-           [2.265283130], negative_pdf=True),
 
     # One-group anisotropic U-D2O (Tables 28-29)
     _infinite(38, 'UD2Oa-1-1-IN', 'UD2Oa-P1', 1.205587),
     _round(39, 'UD2Oa-1-1-SP', 'sphere', [('UD2Oa-P1', 18.30563081)], [10]),
     _infinite(40, 'UD2Ob-1-1-IN', 'UD2Ob-P1', 1.227391),
     _round(41, 'UD2Ob-1-1-SP', 'sphere', [('UD2Ob-P1', 18.30563081)], [10]),
-    # The negative scattering PDF does not affect an infinite medium
+    # The scattering expansion is negative over part of the cosine interval,
+    # but the angular distribution does not affect an infinite medium
     _infinite(42, 'UD2Oc-1-1-IN', 'UD2Oc-P1', 1.130933),
-    _round(43, 'UD2Oc-1-1-SP', 'sphere', [('UD2Oc-P1', 18.30563081)], [10],
-           negative_pdf=True),
 
     # Two-group isotropic Pu-239 (Tables 30-32)
     _infinite(44, 'PU-2-0-IN', 'PU-2G', 2.683767, {(2, 1): 0.675229}),
@@ -424,15 +413,8 @@ PROBLEMS = [
     _round(69, 'UD2O-2-0-SP', 'sphere', [('UD2O-2G', 1695.337621)],
            [569.430]),
 
-    # Two-group linearly anisotropic research reactor (Tables 52-55)
+    # Two-group linearly anisotropic research reactor (Tables 52-53)
     _infinite(70, 'URRa-2-1-IN', 'URRa-2G-P1', 1.631452, {(2, 1): 2.614706}),
-    _bare_slab(71, 'URRa-2-1-SL', 'URRa-2G-P1', 9.491600, 6.2356,
-               [(0.0, 2, 1.0)] +
-               _profile((0.2, 0.5, 0.8, 1.0),
-                        (0.963873, 0.781389, 0.472787, 0.189578), 2) +
-               _profile((0.2, 0.5, 0.8, 1.0),
-                        (0.349006, 0.280870, 0.157376, 0.0277639), 1),
-               negative_pdf=True),
 
     # Two-group linearly anisotropic U-D2O reactor (Tables 56-58)
     _infinite(72, 'UD2O-2-1-IN', 'UD2O-2G-P1', 1.000196, {(2, 1): 26.823271}),

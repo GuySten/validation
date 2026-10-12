@@ -20,7 +20,7 @@ SECONDARIES = {
     'PUa': 1.50, 'PUb': 1.40, 'Ua': 1.30, 'Ub': 1.3194202, 'Uc': 1.3014616,
     'Ud': 1.2958396, 'H2O': 0.90, 'UD2O': 1.02, 'H2O-UD2O': 0.90,
     'Ue': 1.230, 'Fe': 0.9980, 'Na': 1.00, 'PUa-P1': 1.40, 'PUa-P2': 1.40,
-    'PUb-P1': 1.40, 'PUb-P2': 1.40, 'Ua-P1': 1.30, 'Ub-P1': 1.30,
+    'PUb-P2': 1.40, 'Ua-P1': 1.30,
     'UD2Oa-P1': 1.0308381, 'UD2Ob-P1': 1.0341086, 'UD2Oc-P1': 1.01964,
 }
 
@@ -46,8 +46,11 @@ def test_secondaries_per_collision(name):
 
 
 def test_problem_numbers():
-    assert [p.number for p in PROBLEMS] == list(range(1, 76))
-    assert len(sood.PROBLEMS_BY_NAME) == 75
+    # Problems with negative scattering distributions are omitted
+    omitted = {34, 37, 43, 71}
+    expected = [n for n in range(1, 76) if n not in omitted]
+    assert [p.number for p in PROBLEMS] == expected
+    assert len(sood.PROBLEMS_BY_NAME) == len(expected)
 
 
 _INFINITE = [p for p in PROBLEMS if p.geometry == 'infinite']

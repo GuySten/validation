@@ -46,18 +46,8 @@ def _check(results, n_sigma):
     assert not failed, message
 
 
-def _sood_param(problem):
-    marks = []
-    if problem.negative_pdf:
-        marks.append(pytest.mark.xfail(
-            reason='The Legendre scattering expansion is negative over part '
-            'of the cosine interval and cannot be sampled exactly',
-            strict=False))
-    return pytest.param(problem, id=f'{problem.number:02d}-{problem.name}',
-                        marks=marks)
-
-
-@pytest.mark.parametrize('problem', [_sood_param(p) for p in sood.PROBLEMS])
+@pytest.mark.parametrize('problem', sood.PROBLEMS,
+                         ids=lambda p: f'{p.number:02d}-{p.name}')
 def test_sood(problem, request, tmp_path):
     results = run_sood(problem, tmp_path, **_settings(request))
     _check(results, request.config.getoption('n_sigma'))
